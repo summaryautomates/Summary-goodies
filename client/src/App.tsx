@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import NotFound from "@/pages/not-found";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Components
 import Header from "./components/Header";
@@ -24,6 +28,7 @@ import { ProductCategory } from "@shared/schema";
 function EcommercePage() {
   const [activeCategory, setActiveCategory] = useState<ProductCategory>("All Products");
   const { toast } = useToast();
+  const sectionsRef = useRef<HTMLElement>(null);
   
   const {
     cartItems,
@@ -36,9 +41,29 @@ function EcommercePage() {
     closeCart
   } = useCart();
 
-  // Initialize with dark theme
+  // Initialize with dark theme and smooth scrolling
   useEffect(() => {
     document.documentElement.classList.add('dark');
+    
+    // Smooth scrolling for the entire page
+    gsap.set(document.documentElement, {
+      scrollBehavior: "smooth"
+    });
+
+    // Global page load animation
+    const sections = document.querySelectorAll('section');
+    gsap.set(sections, { opacity: 0 });
+    
+    gsap.to(sections, {
+      opacity: 1,
+      duration: 1,
+      stagger: 0.2,
+      ease: "power3.out"
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
   }, []);
 
   const handleAddToCart = (product: any) => {
@@ -73,7 +98,7 @@ function EcommercePage() {
       <Hero onShopNow={handleShopNow} />
 
       {/* Products Section */}
-      <section id="products" className="py-16 px-4">
+      <section ref={sectionsRef} id="products" className="py-16 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">

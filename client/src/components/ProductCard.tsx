@@ -1,8 +1,13 @@
+import { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Eye } from "lucide-react";
 import { Product } from "@shared/schema";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface ProductCardProps {
   product: Product;
@@ -11,8 +16,67 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart, onViewDetails }: ProductCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    // Initial state
+    gsap.set(card, { opacity: 0, y: 30, scale: 0.95 });
+
+    // Scroll-triggered animation
+    gsap.to(card, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.8,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: card,
+        start: "top bottom-=100",
+        end: "bottom top",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    // Hover animation setup
+    const handleMouseEnter = () => {
+      gsap.to(card, {
+        y: -8,
+        scale: 1.02,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gsap.to(card, {
+        y: 0,
+        scale: 1,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    };
+
+    card.addEventListener('mouseenter', handleMouseEnter);
+    card.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      card.removeEventListener('mouseenter', handleMouseEnter);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+      
+      // Clean up ScrollTriggers
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.trigger === card) {
+          trigger.kill();
+        }
+      });
+    };
+  }, []);
+
   return (
-    <Card className="group hover-elevate overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300">
+    <Card ref={cardRef} className="group overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
       <div className="relative overflow-hidden">
         <img 
           src={product.image} 

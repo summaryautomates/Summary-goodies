@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { X, Plus, Minus, MessageCircle } from "lucide-react";
 import { Product, CartItem } from "@shared/schema";
+import { gsap } from "gsap";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -22,23 +23,76 @@ export default function CartSidebar({
   onRemoveItem,
   onCheckout 
 }: CartSidebarProps) {
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  
   const total = cartItems.reduce((sum, item) => sum + (parseFloat(item.product.price) * item.quantity), 0);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    const backdrop = backdropRef.current;
+    
+    if (!sidebar || !backdrop) return;
+
+    if (isOpen) {
+      // Open animation
+      gsap.set([backdrop, sidebar], { display: 'block', pointerEvents: 'auto' });
+      gsap.fromTo(backdrop, 
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power2.out" }
+      );
+      gsap.fromTo(sidebar,
+        { x: '100%' },
+        { x: '0%', duration: 0.4, ease: "power3.out" }
+      );
+      
+      // Animate cart items
+      const items = sidebar.querySelectorAll('[data-testid^="cart-item-"]');
+      gsap.fromTo(items,
+        { opacity: 0, x: 30 },
+        { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, delay: 0.2, ease: "power2.out" }
+      );
+    } else {
+      // Close animation
+      gsap.to(sidebar,
+        { 
+          x: '100%', 
+          duration: 0.3, 
+          ease: "power2.in",
+          onComplete: () => {
+            gsap.set(sidebar, { display: 'none', pointerEvents: 'none' });
+          }
+        }
+      );
+      gsap.to(backdrop,
+        { 
+          opacity: 0, 
+          duration: 0.2,
+          onComplete: () => {
+            gsap.set(backdrop, { display: 'none', pointerEvents: 'none' });
+          }
+        }
+      );
+    }
+  }, [isOpen]);
 
   return (
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+        ref={backdropRef}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 pointer-events-none"
         onClick={onClose}
         data-testid="cart-backdrop"
+        style={{ display: 'none' }}
       />
       
       {/* Sidebar */}
       <div 
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 overflow-y-auto"
+        ref={sidebarRef}
+        className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 overflow-y-auto pointer-events-none"
         data-testid="cart-sidebar"
+        style={{ display: 'none' }}
       >
         <div className="p-6">
           {/* Header */}

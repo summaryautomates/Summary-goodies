@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Menu, X, Sparkles } from "lucide-react";
 import { CartItem } from "@shared/schema";
+import { gsap } from "gsap";
 
 interface HeaderProps {
   cartItems?: CartItem[];
@@ -12,8 +13,32 @@ interface HeaderProps {
 
 export default function Header({ cartItems = [], onCartClick, onMenuClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrollOpacity, setScrollOpacity] = useState(0.95);
   
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          const maxScroll = 300;
+          
+          // Calculate opacity: starts at 0.95, goes to 1 as user scrolls
+          const opacity = Math.min(0.95 + (scrollY / maxScroll) * 0.05, 1);
+          setScrollOpacity(opacity);
+          
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -21,7 +46,14 @@ export default function Header({ cartItems = [], onCartClick, onMenuClick }: Hea
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
+    <header 
+      id="main-header"
+      className="sticky top-0 z-50 border-b border-border/50 transition-all duration-300"
+      style={{
+        backgroundColor: `hsl(var(--background) / ${scrollOpacity})`,
+        backdropFilter: 'blur(8px)',
+      }}
+    >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}

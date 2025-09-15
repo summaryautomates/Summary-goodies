@@ -1,5 +1,10 @@
+import { useEffect, useRef } from "react";
 import { Product, ProductCategory } from "@shared/schema";
 import ProductCard from "./ProductCard";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface ProductGridProps {
   products: Product[];
@@ -14,9 +19,62 @@ export default function ProductGrid({
   onAddToCart, 
   onViewDetails 
 }: ProductGridProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  
   const filteredProducts = activeCategory === "All Products" 
     ? products 
     : products.filter(product => product.category === activeCategory);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // Animate grid container
+    gsap.fromTo(grid, 
+      { opacity: 0, y: 30 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 0.8, 
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: grid,
+          start: "top bottom-=100",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.trigger === grid) {
+          trigger.kill();
+        }
+      });
+    };
+  }, []);
+
+  // Animate when category changes
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // Fade out and in with new products
+    gsap.to(grid, {
+      opacity: 0.3,
+      scale: 0.98,
+      duration: 0.2,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.to(grid, {
+          opacity: 1,
+          scale: 1,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+      }
+    });
+  }, [activeCategory]);
 
   if (filteredProducts.length === 0) {
     return (
@@ -33,6 +91,7 @@ export default function ProductGrid({
 
   return (
     <div 
+      ref={gridRef}
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       data-testid="product-grid"
     >
