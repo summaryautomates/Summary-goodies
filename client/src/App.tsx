@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Components
 import Header from "./components/Header";
+import About from "./components/ui/about";
 import Hero from "./components/Hero";
 import CategoryFilter from "./components/CategoryFilter";
 import ProductGrid from "./components/ProductGrid";
@@ -124,6 +125,14 @@ function EcommercePage() {
           />
         </div>
       </section>
+
+        {/* About Section */}
+        <section id="about" className="py-16 px-4">
+          <div className="container mx-auto">
+            {/* Directly import and render About component */}
+            <About />
+          </div>
+        </section>
 
       {/* Footer */}
       <Footer />

@@ -332,3 +332,9 @@
     inset: -1px;
   }
 }
+
+  /* Neon Light Blue Accent for Goodies text */
+  .text-accent {
+    color: #2176ae !important;
+    font-weight: 700;
+  }
